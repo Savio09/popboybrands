@@ -3,6 +3,7 @@ import { db } from "../../db/db";
 import { z } from "zod";
 import fs from "fs/promises";
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 // Zod is used for data validation
 
 const fileSchema = z.instanceof(File, { message: "File is required" });
@@ -53,7 +54,8 @@ export async function addProduct(prevState: unknown, formData: FormData) {
   } catch (error) {
     console.error(error);
   }
-
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
 
@@ -113,6 +115,8 @@ export async function updateProduct(
     console.error(error);
   }
 
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
 
@@ -124,6 +128,8 @@ export async function toggleProductAvailability(
     where: { id },
     data: { isAvailableForPurchase: isAvailable },
   });
+  revalidatePath("/");
+  revalidatePath("/products");
 }
 
 export async function deleteProduct(id: string) {
@@ -131,4 +137,6 @@ export async function deleteProduct(id: string) {
   if (!product) return notFound();
   await fs.unlink(product.filePath);
   await fs.unlink(`public${product.imagePath}`);
+  revalidatePath("/");
+  revalidatePath("/products");
 }

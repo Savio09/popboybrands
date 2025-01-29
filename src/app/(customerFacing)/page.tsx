@@ -2,34 +2,43 @@ import { Button } from "@/components/ui/button";
 import { db } from "../db/db";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { cache } from "../../lib/cache";
 import { ProductCard, ProductCardSkeleton } from "../../components/ProductCard";
 import { Suspense } from "react";
 
-async function getMostPopularProducts() {
-  // This function will be called to get the newest products
-  return await db.product.findMany({
-    where: {
-      isAvailableForPurchase: true,
-    },
-    orderBy: {
-      orders: { _count: "desc" },
-    },
-    take: 6,
-  });
-}
+const getMostPopularProducts = cache(
+  () => {
+    // This function will be called to get the newest products
+    return db.product.findMany({
+      where: {
+        isAvailableForPurchase: true,
+      },
+      orderBy: {
+        orders: { _count: "desc" },
+      },
+      take: 6,
+    });
+  },
+  ["/", "getMostPopularProducts"],
+  { revalidate: 60 * 60 * 24 }
+);
 
-async function getNewestProducts() {
-  // This function will be called to get the newest products
-  return await db.product.findMany({
-    where: {
-      isAvailableForPurchase: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 6,
-  });
-}
+const getNewestProducts = cache(
+  () => {
+    // This function will be called to get the newest products
+    return db.product.findMany({
+      where: {
+        isAvailableForPurchase: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 6,
+    });
+  },
+  ["/", "getNewestProducts"],
+  { revalidate: 60 * 3 }
+);
 
 // function wait(duration: number) {
 //   return new Promise((resolve) => setTimeout(resolve, duration));
